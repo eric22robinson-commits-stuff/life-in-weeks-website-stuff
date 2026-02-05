@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life in Weeks - Final</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f4;
+            --panel-bg: #ffffff;
+            --text-color: #333;
+            --text-muted: #999;
+            --grid-base: #e0e0e0;
+            --grid-gap: #ffffff;
+            
+            /* Dynamic Dot Size */
+            --dot-size: 4px; 
+            --dot-color: rgba(0,0,0,0.65);
+
+            /* Highlights */
+            --hl-olympics: #FFD700; 
+            --hl-election: #2196F3;
+            --hl-superbowl: #FF5722;
+            --hl-worldcup: #4CAF50;
+            --hl-winter: #B3E5FC; 
+            --hl-spring: #C8E6C9;
+            --hl-summer: #FFF9C4;
+            --hl-autumn: #FFE0B2;
+            --hl-birthday: #F48FB1;
+            --hl-christmas: #D32F2F;
+        }
+
+        /* RESET */
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0;
+            height: 100vh; width: 100vw;
+            overflow: hidden; 
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .app-wrapper {
+            display: flex; width: 100%; height: 100%;
+            padding: 20px; gap: 20px;
+            opacity: 0; animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* INTRO */
+        #intro-view {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: left; width: 100%; max-width: 800px; z-index: 999;
+        }
+        #intro-view h1 { font-size: 64px; font-weight: 800; margin: 0 0 25px 0; letter-spacing: -2px; color: #222; }
+        #intro-view p { font-size: 22px; line-height: 1.5; color: #666; margin-bottom: 50px; max-width: 700px; font-weight: 300; }
+        #intro-view label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; display: block; margin-bottom: 10px; }
+        #intro-view input { font-size: 24px; padding: 15px; width: 100%; margin-bottom: 40px; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
+        #intro-view button { font-size: 18px; padding: 20px 50px; text-transform: uppercase; letter-spacing: 1px; background: #333; color: #fff; border: none; cursor: pointer; border-radius: 4px; font-weight: 600; }
+        #intro-view button:hover { background: #000; }
+
+        #main-view { display: none; width: 100%; height: 100%; flex-direction: row; gap: 20px; }
+
+        /* PANELS */
+        .controls-panel, .stats-panel {
+            flex: 0 0 280px;
+            background: var(--panel-bg); padding: 20px;
+            border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            overflow-y: auto; display: flex; flex-direction: column;
+        }
+
+        .vis-panel { 
+            flex: 1; display: flex; flex-direction: column; 
+            background: #fff; padding: 20px; border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            overflow-y: auto; overflow-x: hidden; position: relative;
+        }
+
+        /* UI ELEMENTS */
+        h2 { font-size: 15px; font-weight: 700; margin: 0 0 15px 0; }
+        h3 { font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin: 15px 0 8px 0; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px; font-weight: 600; }
+        
+        .control-group { margin-bottom: 10px; border-bottom: 1px solid #f9f9f9; padding-bottom: 8px; }
+        .control-header { display: flex; align-items: center; margin-bottom: 5px; gap: 6px; }
+        
+        /* COLOR PICKER FIX */
+        input[type="color"] { 
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px; 
+            padding: 0; border: none; 
+            border-radius: 50%; cursor: pointer; background: none; 
+            overflow: hidden;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+        .chapter-name-input { border: none; background: transparent; font-size: 12px; font-weight: 600; width: 100%; color: #333; }
+        .inputs-row { display: flex; gap: 5px; }
+        .input-wrapper { flex: 1; }
+        .input-wrapper label { display: block; font-size: 9px; color: var(--text-muted); }
+        input[type="number"], input[type="date"], input[type="text"] { width: 100%; border: 1px solid #ddd; padding: 5px; font-size: 11px; border-radius: 3px; font-family: inherit; }
+        
+        /* PRESETS */
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .preset-btn { 
+            background: #fff; border: 1px solid #ddd; padding: 8px; 
+            font-size: 10px; text-transform: uppercase; cursor: pointer; 
+            border-radius: 3px; text-align: center; color: #555; transition: all 0.2s;
+        }
+        .preset-btn:hover { border-color: #333; color: #333; }
+        .preset-btn.active { background: #333; color: #fff; border-color: #333; }
+        .preset-desc { font-size: 9px; color: #999; margin-bottom: 20px; font-style: italic; min-height: 12px; }
+
+        .slider-container { margin-bottom: 20px; }
+        .slider-label { font-size: 10px; font-weight: 600; color: #666; margin-bottom: 5px; display: block; }
+        input[type=range] { width: 100%; cursor: pointer; }
+
+        /* BUTTONS */
+        .btn-add, .btn-stoic, .btn-print, .btn-close-stoic { background: #fafafa; border: 1px dashed #ccc; color: #666; padding: 8px; font-size: 10px; text-transform: uppercase; cursor: pointer; border-radius: 3px; }
+        .btn-add:hover { background: #eee; }
+        .btn-stoic { width: 100%; background: #333; color: #fff; border: none; padding: 12px; margin-bottom: 15px; border-style: solid; transition: background 0.2s; }
+        .btn-print { background: #333; color: white; border: none; padding: 6px 12px; border-style: solid; }
+        .btn-delete { background: none; border: none; color: #ccc; cursor: pointer; margin-left: auto; }
+        .btn-delete:hover { color: red; }
+        .emoji-select { border: none; background: transparent; font-size: 14px; width: 30px; }
+
+        details { margin-bottom: 5px; border-bottom: 1px solid #f5f5f5; padding-bottom: 5px; }
+        summary { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; cursor: pointer; list-style: none; display: flex; justify-content: space-between; font-weight: 600; padding: 8px 0; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: '+'; font-weight: 400; }
+        details[open] summary::after { content: '-'; }
+
+        /* STATS */
+        .stat-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; font-size: 12px; }
+        .stat-left { display: flex; flex-direction: column; }
+        .stat-label { font-weight: 600; color: #333; }
+        .stat-sub { font-size: 10px; color: #999; margin-top: 2px; }
+        .stat-right { display: flex; align-items: center; gap: 8px; }
+        .stat-value { font-family: monospace; font-size: 12px; color: #333; font-weight: 600; }
+        .toggle-btn { background: none; border: 1px solid #eee; border-radius: 3px; cursor: pointer; padding: 2px 6px; font-size: 10px; color: #ccc; }
+        .toggle-btn:hover { border-color: #999; color: #999; }
+        .toggle-btn.active { background: #333; color: #fff; border-color: #333; }
+
+        .vis-header { display: flex; align-items: flex-end; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; flex-shrink: 0; }
+        .stats-bar { display: flex; gap: 25px; flex: 1; }
+        .stat-box .num { font-size: 24px; font-weight: 300; display: block; line-height: 1; }
+        .stat-box .lbl { font-size: 9px; text-transform: uppercase; color: var(--text-muted); }
+
+        /* GRID */
+        .life-grid { 
+            display: grid; grid-template-columns: 20px repeat(52, 1fr); 
+            gap: 1px; background-color: var(--grid-gap); 
+            border: 1px solid var(--grid-gap); width: 100%; 
+        }
+        .year-num { font-size: 9px; color: #ccc; text-align: right; padding-right: 6px; font-family: monospace; line-height: 1; display: flex; align-items: center; justify-content: flex-end; background: #fff;}
+        .year-num.decade { color: #888; font-weight: bold; }
+        .month-header-cell { font-size: 8px; color: #888; text-align: left; padding-left: 2px; font-weight: 600; padding-bottom: 5px; background: #fff;}
+        .corner-cell { width: 20px; background: #fff;}
+        
+        .week { width: 100%; aspect-ratio: 1 / 1; background-color: var(--grid-base); position: relative; cursor: pointer; }
+        .week:hover { z-index: 100; transform: scale(1.4); box-shadow: 0 0 10px rgba(0,0,0,0.2); transition: transform 0.1s; border-radius: 2px; }
+        .week:hover::after {
+            content: attr(data-info) !important; position: absolute; bottom: 120%; left: 50%;
+            transform: translateX(-50%); background: #333; color: #fff;
+            padding: 6px 10px; font-size: 10px; white-space: pre-line; z-index: 100;
+            border-radius: 3px; pointer-events: none; min-width: 140px; text-align: center;
+            opacity: 1 !important;
+        }
+
+        /* Lived Dot: Default behavior */
+        .week.lived:not(.has-milestone)::before {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: var(--dot-size); height: var(--dot-size); background-color: var(--dot-color); 
+            border-radius: 50%; pointer-events: none;
+        }
+
+        /* --- PRESET OVERRIDES --- */
+        
+        /* 1. NO EMOJI (Mono & Simple) - Hides Icons */
+        body.preset-no-emoji .milestone-icon,
+        body.preset-no-emoji .week.hl-birthday::after,
+        body.preset-no-emoji .week.hl-christmas::after { display: none !important; }
+
+        /* 2. NO EMOJI FIX - Forces dot to appear even if milestone exists (since icon is hidden) */
+        body.preset-no-emoji .week.lived::before {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: var(--dot-size); height: var(--dot-size); background-color: var(--dot-color); 
+            border-radius: 50%; pointer-events: none; display: block !important;
+        }
+
+        /* 3. SIMPLE MODE: White BG, Grey Borders */
+        body.preset-simple .week { 
+            background-color: #fff !important; 
+            border: 1px solid #f0f0f0; 
+        }
+        body.preset-simple .life-grid { background-color: #fff; gap: 0; border: none; }
+
+        /* HIGHLIGHTS */
+        .week.hl-winter::after { content: ''; position: absolute; inset: 0; background-color: var(--hl-winter); opacity: 0.5; pointer-events: none; }
+        .week.hl-spring::after { content: ''; position: absolute; inset: 0; background-color: var(--hl-spring); opacity: 0.5; pointer-events: none; }
+        .week.hl-summer::after { content: ''; position: absolute; inset: 0; background-color: var(--hl-summer); opacity: 0.5; pointer-events: none; }
+        .week.hl-autumn::after { content: ''; position: absolute; inset: 0; background-color: var(--hl-autumn); opacity: 0.5; pointer-events: none; }
+        .week.hl-birthday::after { content: '🎂'; font-size: 8px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; background: none; opacity: 1; }
+        .week.hl-christmas::after { content: '🎄'; font-size: 8px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; background: none; opacity: 1; }
+        
+        .week.hl-olympics { box-shadow: inset 0 0 0 2px var(--hl-olympics); z-index: 5; }
+        .week.hl-election { box-shadow: inset 0 0 0 2px var(--hl-election); z-index: 5; }
+        .week.hl-superbowl { box-shadow: inset 0 0 0 2px var(--hl-superbowl); z-index: 5; }
+        .week.hl-worldcup { box-shadow: inset 0 0 0 2px var(--hl-worldcup); z-index: 5; }
+        .milestone-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; line-height: 1; z-index: 20; }
+
+        /* OVERLAY */
+        #stoic-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); z-index: 500; flex-direction: column; align-items: center; overflow-y: auto; padding: 40px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        .stoic-container { max-width: 600px; width: 100%; margin-top: 20px; }
+        .stoic-header { text-align: center; margin-bottom: 30px; }
+        .stoic-big-num { font-size: 64px; font-weight: 200; color: #000; line-height: 1; }
+        .stoic-sub { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #888; }
+        .stoic-section { margin-bottom: 20px; border-bottom: 1px solid #eee; }
+        .stoic-section summary { font-size: 14px; padding: 15px 0; color: #333; }
+        .stoic-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-bottom: 20px; }
+        .s-item { display: flex; flex-direction: column; }
+        .s-val { font-size: 20px; font-weight: 300; color: #333; }
+        .s-lbl { font-size: 10px; text-transform: uppercase; color: #999; letter-spacing: 0.5px; }
+        .btn-close-stoic { display: block; margin: 20px auto; background: #333; color: #fff; border: none; padding: 12px 30px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .legend-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; flex-shrink: 0; }
+        .legend-item { display: flex; align-items: center; font-size: 10px; color: #555; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+        /* PRINT */
+        @media print {
+            body * { visibility: hidden; }
+            .controls-panel, #intro-view, #stoic-overlay, .btn-print, .btn-stoic, .toggle-btn, .btn-add { display: none !important; }
+            .app-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: auto; padding: 0; margin: 0; display: block; }
+            #main-view { display: block; height: auto; }
+            body.print-mode-grid #printable-area, body.print-mode-grid #printable-area * { visibility: visible; }
+            body.print-mode-grid .stats-panel { display: none !important; }
+            body.print-mode-grid .vis-panel { width: 100%; overflow: visible !important; box-shadow: none; border: none; padding: 0; transform: scale(0.60); transform-origin: top center; }
+            body.print-mode-ledger .stats-panel, body.print-mode-ledger .stats-panel * { visibility: visible; }
+            body.print-mode-ledger #printable-area { display: none !important; }
+            body.print-mode-ledger .stats-panel { display: block; width: 100%; max-width: 800px; margin: 0 auto; box-shadow: none; border: none; padding: 0; overflow: visible !important; }
+            body.print-mode-ledger .stats-panel details { border-bottom: 1px solid #ccc; margin-bottom: 20px; }
+            body.print-mode-ledger .stats-panel summary { font-size: 18px; margin-bottom: 10px; font-weight: bold; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+        @page { size: auto; margin: 0.25in; }
+    </style>
+</head>
+<body>
+
+    <div id="intro-view">
+        <h1>Life in Weeks.</h1>
+        <p>A minimalist dashboard for your life. Visualize your past, present, and future in a single view.</p>
+        <label>DATE OF BIRTH</label>
+        <input type="date" id="birthdate-init" style="margin-bottom: 40px;">
+        <button class="btn-add btn-print" onclick="initApp()" style="width:auto; padding: 20px 60px;">START VISUALIZATION</button>
+    </div>
+
+    <div class="app-wrapper" id="main-view">
+        
+        <div class="controls-panel">
+            <h2>Settings</h2>
+            <div class="preset-grid">
+                <div class="preset-btn active" onclick="applyPreset('default', this)">Default</div>
+                <div class="preset-btn" onclick="applyPreset('vibrant', this)">Vibrant</div>
+                <div class="preset-btn" onclick="applyPreset('simple', this)">Simple</div>
+                <div class="preset-btn" onclick="applyPreset('mono', this)">Mono</div>
+                <div class="preset-btn" onclick="applyPreset('milestone', this)">Focus</div>
+                <div class="preset-btn" onclick="applyPreset('rainbow', this)">New Year</div>
+            </div>
+            <div class="preset-desc" id="preset-desc">Balanced colors and markers.</div>
+
+            <h2>Inputs</h2>
+            <div class="slider-container">
+                <label class="slider-label">Lived Dot Size</label>
+                <input type="range" min="1" max="10" value="4" id="dot-slider" oninput="updateDotSize(this.value)">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label>Current Date</label>
+                <input type="date" id="current-date-input" onchange="updateCurrentDate(this.value)">
+            </div>
+
+            <details open>
+                <summary>Chapters</summary>
+                <div id="chapters-inputs"></div>
+                <button class="btn-add" onclick="addCustomStage()">+ Add</button>
+            </details>
+
+            <details>
+                <summary>Milestones</summary>
+                <p style="font-size:10px; color:#999; margin-bottom: 10px;">Click grid to add.</p>
+                <div id="milestones-inputs"></div>
+                <button class="btn-add" onclick="addMilestone()">+ Add</button>
+            </details>
+        </div>
+
+        <div class="vis-panel" id="printable-area">
+            
+            <div id="stoic-overlay">
+                <div class="stoic-header">
+                    <div class="stoic-title">Memento Mori</div>
+                    <div class="stoic-big-num" id="ov-weeks-left">0</div>
+                    <div class="stoic-sub">Weeks Remaining</div>
+                </div>
+
+                <div class="stoic-container">
+                    <details class="stoic-section" open><summary>1. The Finite</summary><div class="stoic-details-grid"><div class="s-item"><span class="s-val" id="ov-winters">0</span><span class="s-lbl">Winters Left</span></div><div class="s-item"><span class="s-val" id="ov-birthdays">0</span><span class="s-lbl">Birthdays Left</span></div><div class="s-item"><span class="s-val" id="ov-weekends">0</span><span class="s-lbl">Weekends Left</span></div><div class="s-item"><span class="s-val" id="ov-tail">0%</span><span class="s-lbl">The Tail End</span></div></div></details>
+                    <details class="stoic-section"><summary>2. Biological</summary><div class="stoic-details-grid"><div class="s-item"><span class="s-val" id="ov-heart">0</span><span class="s-lbl">Heartbeats (~100k/day)</span></div><div class="s-item"><span class="s-val" id="ov-breath">0</span><span class="s-lbl">Breaths (~22k/day)</span></div><div class="s-item"><span class="s-val" id="ov-sleep">0</span><span class="s-lbl">Years Sleep</span></div><div class="s-item"><span class="s-val" id="ov-meals">0</span><span class="s-lbl">Meals (3/day)</span></div></div></details>
+                    <details class="stoic-section"><summary>3. Cultural</summary><div class="stoic-details-grid"><div class="s-item"><span class="s-val" id="ov-olympics">0</span><span class="s-lbl">Olympics (2/4yrs)</span></div><div class="s-item"><span class="s-val" id="ov-elections">0</span><span class="s-lbl">US Elections (1/4yrs)</span></div><div class="s-item"><span class="s-val" id="ov-superbowls">0</span><span class="s-lbl">Super Bowls (1/yr)</span></div></div></details>
+                    <details class="stoic-section"><summary>4. Cosmic</summary><div class="stoic-details-grid"><div class="s-item"><span class="s-val" id="ov-orbits">0</span><span class="s-lbl">Orbits</span></div><div class="s-item"><span class="s-val" id="ov-distance">0</span><span class="s-lbl">Miles Travelled (Orbit)</span></div></div></details>
+                    <details class="stoic-section"><summary>5. Consumption</summary><div class="stoic-details-grid"><div class="s-item"><span class="s-val" id="ov-books">0</span><span class="s-lbl">Books (~12/yr)</span></div><div class="s-item"><span class="s-val" id="ov-walks">0</span><span class="s-lbl">Miles Walking (~2.5/day)</span></div></div></details>
+                </div>
+
+                <button class="btn-close-stoic" onclick="clickToggleStoic()">Return to Grid</button>
+            </div>
+
+            <div class="vis-header">
+                <div class="stats-bar">
+                    <div class="stat-box"><span class="num" id="stat-lived">0</span><span class="lbl">Lived</span></div>
+                    <div class="stat-box"><span class="num" id="stat-left">0</span><span class="lbl">Left</span></div>
+                    <div class="stat-box"><span class="num" id="stat-pct">0%</span><span class="lbl">Used</span></div>
+                </div>
+                <div style="display:flex;">
+                    <button class="btn-print" onclick="printMode('grid')">Print Grid</button>
+                    <button class="btn-print" style="margin-left:10px" onclick="printMode('ledger')">Print Ledger</button>
+                </div>
+            </div>
+            <div class="legend-bar" id="legend-container"></div>
+            <div class="life-grid" id="grid"></div>
+        </div>
+
+        <div class="stats-panel">
+            <button class="btn-stoic" onclick="clickToggleStoic()">Memento Mori Mode</button>
+            
+            <details>
+                <summary>1. The Finite</summary>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Winters</span><span class="stat-sub">Seasons Left</span></div><div class="stat-right"><span class="stat-value" id="s-winters">0</span><button class="toggle-btn" onclick="toggleHighlight('winters', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Springs</span><span class="stat-sub">Seasons Left</span></div><div class="stat-right"><span class="stat-value" id="s-springs">0</span><button class="toggle-btn" onclick="toggleHighlight('springs', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Summers</span><span class="stat-sub">Seasons Left</span></div><div class="stat-right"><span class="stat-value" id="s-summers">0</span><button class="toggle-btn" onclick="toggleHighlight('summers', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Autumns</span><span class="stat-sub">Seasons Left</span></div><div class="stat-right"><span class="stat-value" id="s-autumns">0</span><button class="toggle-btn" onclick="toggleHighlight('autumns', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Birthdays</span><span class="stat-sub">Annual</span></div><div class="stat-right"><span class="stat-value" id="s-birthdays">0</span><button class="toggle-btn" onclick="toggleHighlight('birthdays', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Weekends</span><span class="stat-sub">2 days/week</span></div><div class="stat-right"><span class="stat-value" id="s-weekends">0</span></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">The Tail End</span><span class="stat-sub">% Remaining</span></div><div class="stat-right"><span class="stat-value" id="s-tail">0%</span></div></div>
+            </details>
+
+            <details>
+                <summary>2. Biological</summary>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Heartbeats</span><span class="stat-sub">~100k/day</span></div><div class="stat-right"><span class="stat-value" id="s-heart">0</span></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Steps</span><span class="stat-sub">~7k/day</span></div><div class="stat-right"><span class="stat-value" id="s-steps">0</span></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Breaths</span><span class="stat-sub">~22k/day</span></div><div class="stat-right"><span class="stat-value" id="s-breath">0</span></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Sleep</span><span class="stat-sub">Years (8hr/day)</span></div><div class="stat-right"><span class="stat-value" id="s-sleep">0</span></div></div>
+            </details>
+
+            <details>
+                <summary>3. Cultural</summary>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Christmases</span><span class="stat-sub">Annual (Dec 25)</span></div><div class="stat-right"><span class="stat-value" id="s-christmas">0</span><button class="toggle-btn" onclick="toggleHighlight('christmas', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Olympics</span><span class="stat-sub">Every 2 yrs</span></div><div class="stat-right"><span class="stat-value" id="s-olympics">0</span><button class="toggle-btn" onclick="toggleHighlight('olympics', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">World Cups</span><span class="stat-sub">Every 4 yrs</span></div><div class="stat-right"><span class="stat-value" id="s-worldcup">0</span><button class="toggle-btn" onclick="toggleHighlight('worldcup', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Elections</span><span class="stat-sub">US Pres (4yr)</span></div><div class="stat-right"><span class="stat-value" id="s-elections">0</span><button class="toggle-btn" onclick="toggleHighlight('elections', this)">👁️</button></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Super Bowls</span><span class="stat-sub">Annual (Feb)</span></div><div class="stat-right"><span class="stat-value" id="s-superbowls">0</span><button class="toggle-btn" onclick="toggleHighlight('superbowls', this)">👁️</button></div></div>
+            </details>
+
+            <details>
+                <summary>4. Cosmic</summary>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Orbits</span><span class="stat-sub">Around Sun</span></div><div class="stat-right"><span class="stat-value" id="s-orbits">0</span></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Travelled</span><span class="stat-sub">Km in Orbit</span></div><div class="stat-right"><span class="stat-value" id="s-km">0</span></div></div>
+            </details>
+
+            <details>
+                <summary>5. Consumption</summary>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Meals</span><span class="stat-sub">3 per day</span></div><div class="stat-right"><span class="stat-value" id="s-meals">0</span></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Showers</span><span class="stat-sub">1 per day</span></div><div class="stat-right"><span class="stat-value" id="s-showers">0</span></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Books</span><span class="stat-sub">~12/year</span></div><div class="stat-right"><span class="stat-value" id="s-books">0</span></div></div>
+                <div class="stat-row"><div class="stat-left"><span class="stat-label">Walking</span><span class="stat-sub">Miles (~2.5/day)</span></div><div class="stat-right"><span class="stat-value" id="s-walks">0</span></div></div>
+            </details>
+        </div>
+    </div>
+
+    <script>
+        const defaultStages = [
+            { id: 'early', label: 'Early Years', start: 0, dur: 5, color: '#b0bec5', type: 'standard' },
+            { id: 'elem', label: 'Elementary', start: 5, dur: 6, color: '#90caf9', type: 'standard' },
+            { id: 'middle', label: 'Middle School', start: 11, dur: 3, color: '#4db6ac', type: 'standard' },
+            { id: 'high', label: 'High School', start: 14, dur: 4, color: '#81c784', type: 'standard' },
+            { id: 'college', label: 'College', start: 18, dur: 4, color: '#ffd54f', type: 'standard' },
+            { id: 'career', label: 'Career', start: 22, dur: 40, color: '#e57373', type: 'standard' },
+            { id: 'retire', label: 'Retirement', start: 62, dur: 28, color: '#ba68c8', type: 'standard' }
+        ];
+
+        const vibrantStages = [
+            { id: 'early', label: 'Early Years', start: 0, dur: 5, color: '#FF7043', type: 'standard' },
+            { id: 'elem', label: 'Elementary', start: 5, dur: 6, color: '#29B6F6', type: 'standard' },
+            { id: 'middle', label: 'Middle School', start: 11, dur: 3, color: '#66BB6A', type: 'standard' },
+            { id: 'high', label: 'High School', start: 14, dur: 4, color: '#AB47BC', type: 'standard' },
+            { id: 'college', label: 'College', start: 18, dur: 4, color: '#FFA726', type: 'standard' },
+            { id: 'career', label: 'Career', start: 22, dur: 40, color: '#EF5350', type: 'standard' },
+            { id: 'retire', label: 'Retirement', start: 62, dur: 28, color: '#26A69A', type: 'standard' }
+        ];
+        
+        let stages = JSON.parse(JSON.stringify(defaultStages));
+        let milestones = [];
+        let birthDate = null;
+        let currentDate = new Date();
+        const LIFE_EXPECTANCY = 90;
+        let activeHighlights = { 
+            winters: false, springs: false, summers: false, autumns: false, 
+            olympics: false, elections: false, birthdays: false, superbowls: false, christmas: false, worldcup: false 
+        };
+        const baseMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const baseSpans = [4, 4, 5, 4, 4, 5, 4, 4, 5, 4, 4, 5];
+        let currentMode = 'default';
+
+        function initApp() {
+            const dateInput = document.getElementById('birthdate-init').value;
+            if (!dateInput) return alert("Please enter birth date");
+            const parts = dateInput.split('-');
+            birthDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            document.getElementById('current-date-input').valueAsDate = new Date();
+            document.getElementById('intro-view').style.display = 'none';
+            document.getElementById('main-view').style.display = 'flex';
+            milestones.push({ id: Date.now(), date: dateInput, label: 'Born', icon: '👶' });
+            buildInputs(); renderGrid();
+        }
+
+        function updateCurrentDate(val) { if(val) { const parts = val.split('-'); currentDate = new Date(parts[0], parts[1] - 1, parts[2]); renderGrid(); } }
+        function toggleHighlight(type, btn) { 
+            activeHighlights[type] = !activeHighlights[type]; 
+            if(activeHighlights[type]) btn.classList.add('active'); else btn.classList.remove('active'); 
+            renderGrid(); 
+        }
+        function updateDotSize(val) { document.documentElement.style.setProperty('--dot-size', val + 'px'); }
+
+        function clickToggleStoic() {
+            const overlay = document.getElementById('stoic-overlay');
+            const isHidden = overlay.style.display === 'none' || overlay.style.display === '';
+            updateStoicStats(isHidden); 
+            overlay.style.display = isHidden ? 'flex' : 'none';
+        }
+
+        function printMode(mode) {
+            document.body.classList.remove('print-mode-grid', 'print-mode-ledger');
+            document.body.classList.add('print-mode-' + mode);
+            if(mode === 'ledger') {
+                const details = document.querySelectorAll('.stats-panel details');
+                details.forEach(d => d.open = true);
+            }
+            window.print();
+        }
+
+        function applyPreset(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+
+            const desc = document.getElementById('preset-desc');
+            const body = document.body;
+            body.className = ''; 
+
+            if (mode === 'default') {
+                stages = JSON.parse(JSON.stringify(defaultStages));
+                desc.innerText = "Balanced colors and markers.";
+                updateDotSize(4); document.getElementById('dot-slider').value = 4;
+            } 
+            else if (mode === 'vibrant') {
+                stages = JSON.parse(JSON.stringify(vibrantStages));
+                desc.innerText = "High contrast, bold colors.";
+                updateDotSize(4); document.getElementById('dot-slider').value = 4;
+            }
+            else if (mode === 'simple') {
+                stages = JSON.parse(JSON.stringify(defaultStages));
+                stages.forEach(s => s.color = '#ffffff');
+                body.classList.add('preset-no-emoji', 'preset-simple');
+                desc.innerText = "White background, no icons.";
+            } 
+            else if (mode === 'mono') {
+                stages = JSON.parse(JSON.stringify(defaultStages));
+                const greys = ['#eeeeee', '#d0d0d0', '#b0b0b0', '#909090', '#707070', '#505050'];
+                stages.forEach((s, i) => s.color = greys[i % greys.length]);
+                body.classList.add('preset-no-emoji');
+                desc.innerText = "Greyscale elegance.";
+            } 
+            else if (mode === 'milestone') {
+                stages = JSON.parse(JSON.stringify(defaultStages));
+                updateDotSize(2); document.getElementById('dot-slider').value = 2;
+                desc.innerText = "Tiny dots to emphasize events.";
+            } 
+            else if (mode === 'rainbow') {
+                stages = JSON.parse(JSON.stringify(defaultStages));
+                desc.innerText = "Distinct distinct bands per year.";
+            }
+
+            buildInputs();
+            renderGrid();
+        }
+
+        function updateStoicStats(show) {
+            if(!show) return;
+            const totalWeeks = LIFE_EXPECTANCY * 52;
+            const totalWeeksLived = Math.floor((currentDate - birthDate)/(1000*60*60*24*7));
+            const weeksLeft = totalWeeks - totalWeeksLived;
+            const yearsLeft = LIFE_EXPECTANCY - Math.floor(totalWeeksLived/52);
+            const daysLeft = weeksLeft * 7;
+
+            const setStat = (id, val) => {
+                const ov = document.getElementById('ov-'+id);
+                const sb = document.getElementById('s-'+id);
+                if(ov) ov.innerText = val;
+                if(sb) sb.innerText = val;
+            };
+
+            document.getElementById('ov-weeks-left').innerText = weeksLeft.toLocaleString();
+
+            setStat('winters', yearsLeft);
+            setStat('springs', yearsLeft);
+            setStat('summers', yearsLeft);
+            setStat('autumns', yearsLeft);
+            setStat('birthdays', yearsLeft);
+
+            setStat('heart', (daysLeft * 100000).toLocaleString());
+            setStat('breath', (daysLeft * 22000).toLocaleString());
+            setStat('sleep', Math.floor(yearsLeft / 3)); 
+            setStat('steps', (daysLeft * 7000).toLocaleString());
+
+            setStat('olympics', Math.floor(yearsLeft / 2));
+            setStat('elections', Math.floor(yearsLeft / 4));
+            setStat('worldcup', Math.floor(yearsLeft / 4));
+            setStat('superbowls', yearsLeft);
+            setStat('christmas', yearsLeft);
+
+            setStat('orbits', yearsLeft);
+            setStat('distance', (yearsLeft * 584).toLocaleString() + "M");
+
+            setStat('books', (yearsLeft * 12).toLocaleString());
+            setStat('walks', (daysLeft * 2.5).toLocaleString());
+        }
+
+        function addCustomStage() { stages.push({id:Date.now(), label:'New', start:30, dur:5, color:'#ccc', type:'custom'}); buildInputs(); renderGrid(); }
+        function removeStage(i) { stages.splice(i,1); buildInputs(); renderGrid(); }
+        function updateStage(i,f,v) { stages[i][f] = (f=='color'||f=='label')?v:parseInt(v); renderGrid(); }
+        function addMilestone(d='', l='') { milestones.push({id:Date.now(), date:d, label:l||'Event', icon:'📍'}); buildInputs(); renderGrid(); }
+        function removeMilestone(i) { milestones.splice(i,1); buildInputs(); renderGrid(); }
+        function updateMilestone(i,f,v) { milestones[i][f] = v; renderGrid(); }
+
+        function buildInputs() {
+            const chapContainer = document.getElementById('chapters-inputs');
+            const mileContainer = document.getElementById('milestones-inputs');
+            chapContainer.innerHTML = ''; mileContainer.innerHTML = '';
+            stages.forEach((s, i) => {
+                const div = document.createElement('div'); div.className = 'control-group';
+                div.innerHTML = `<div class="control-header"><input type="color" value="${s.color}" onchange="updateStage(${i},'color',this.value)"><input class="chapter-name-input" type="text" value="${s.label}" onchange="updateStage(${i},'label',this.value)">${s.type=='custom'?`<button class="btn-delete" onclick="removeStage(${i})">×</button>`:''}</div><div class="inputs-row"><div class="input-wrapper"><label>Start</label><input type="number" value="${s.start}" onchange="updateStage(${i},'start',this.value)"></div><div class="input-wrapper"><label>Duration</label><input type="number" value="${s.dur}" onchange="updateStage(${i},'dur',this.value)"></div></div>`;
+                chapContainer.appendChild(div);
+            });
+            milestones.forEach((m, i) => {
+                const div = document.createElement('div'); div.className = 'control-group';
+                let opts = ''; 
+                const emojiList = [{v:'📍'}, {v:'🎓'}, {v:'💍'}, {v:'🏠'}, {v:'👶'}, {v:'💼'}, {v:'✈️'}, {v:'🏥'}, {v:'🏆'}, {v:'🐶'}, {v:'☠️'}, {v:'🏁'}];
+                emojiList.forEach(o=>opts+=`<option value="${o.v}" ${m.icon==o.v?'selected':''}>${o.v}</option>`);
+                div.innerHTML = `<div class="control-header"><select class="emoji-select" onchange="updateMilestone(${i},'icon',this.value)">${opts}</select><input class="chapter-name-input" type="text" value="${m.label}" onchange="updateMilestone(${i},'label',this.value)"><button class="btn-delete" onclick="removeMilestone(${i})">×</button></div><div class="inputs-row"><input type="date" value="${m.date}" onchange="updateMilestone(${i},'date',this.value)"></div>`;
+                mileContainer.appendChild(div);
+            });
+        }
+
+        function renderGrid() {
+            updateStoicStats(true); 
+
+            const grid = document.getElementById('grid');
+            const legend = document.getElementById('legend-container');
+            grid.innerHTML = ''; legend.innerHTML = '';
+
+            const corner = document.createElement('div'); corner.className = 'corner-cell'; grid.appendChild(corner);
+            const startMonthIdx = birthDate.getMonth();
+            const rotatedNames = [...baseMonths.slice(startMonthIdx), ...baseMonths.slice(0, startMonthIdx)];
+            const rotatedSpans = [...baseSpans.slice(startMonthIdx), ...baseSpans.slice(0, startMonthIdx)];
+            rotatedNames.forEach((m, i) => { const d = document.createElement('div'); d.className='month-header-cell'; d.innerText=m; d.style.gridColumnEnd=`span ${rotatedSpans[i]}`; grid.appendChild(d); });
+
+            const totalWeeksLived = Math.floor((currentDate - birthDate)/(1000*60*60*24*7));
+            const totalWeeks = LIFE_EXPECTANCY * 52;
+            const weeksLeft = totalWeeks - totalWeeksLived;
+            let ageYears = currentDate.getFullYear() - birthDate.getFullYear();
+            let tempDate = new Date(birthDate); tempDate.setFullYear(currentDate.getFullYear()); if(currentDate<tempDate) ageYears--;
+            let lastBirthday = new Date(birthDate); lastBirthday.setFullYear(birthDate.getFullYear() + ageYears);
+            const weeksSinceBirthday = Math.floor((currentDate - lastBirthday) / (1000*60*60*24*7));
+
+            document.getElementById('stat-lived').innerText = totalWeeksLived.toLocaleString();
+            document.getElementById('stat-left').innerText = weeksLeft.toLocaleString();
+            document.getElementById('stat-pct').innerText = ((totalWeeksLived/totalWeeks)*100).toFixed(1)+'%';
+
+            // PREPARE COLORS
+            let yearData = new Array(LIFE_EXPECTANCY).fill(null).map(() => []);
+            
+            if (currentMode === 'rainbow') {
+                for(let y=0; y<LIFE_EXPECTANCY; y++) {
+                    yearData[y] = [`hsl(${(y * 137.5) % 360}, 65%, 75%)`];
+                }
+            } else {
+                stages.forEach(s => {
+                    if(s.dur>0) { 
+                        if(currentMode !== 'rainbow') legend.innerHTML+=`<div class="legend-item"><div class="legend-dot" style="background:${s.color}"></div>${s.label}</div>`;
+                        for(let i=0; i<s.dur; i++) if(s.start+i < LIFE_EXPECTANCY) yearData[s.start+i].push(s.color);
+                    }
+                });
+            }
+            legend.innerHTML+=`<div class="legend-item"><div class="legend-dot" style="border:1px solid #333; background:transparent; display:flex; justify-content:center; align-items:center;"><div style="width:4px; height:4px; background:rgba(0,0,0,0.65); border-radius:50%"></div></div>Lived</div>`;
+
+            const fragment = document.createDocumentFragment();
+            for(let year=0; year<LIFE_EXPECTANCY; year++) {
+                const label = document.createElement('div'); label.className='year-num'+(year%10==0?' decade':''); label.innerText=year; fragment.appendChild(label);
+                for(let w=0; w<52; w++) {
+                    const div = document.createElement('div'); div.className='week';
+                    
+                    let isLived = false;
+                    if(year < ageYears) { div.classList.add('lived'); isLived = true; }
+                    else if(year === ageYears && w < weeksSinceBirthday) { div.classList.add('lived'); isLived = true; }
+
+                    if(year < LIFE_EXPECTANCY) {
+                        const cols = yearData[year];
+                        if(cols.length==1) div.style.backgroundColor = cols[0];
+                        else if(cols.length>1) div.style.background = `linear-gradient(135deg, ${cols[0]} 50%, ${cols[1]} 50%)`;
+
+                        let dStart = new Date(birthDate); dStart.setFullYear(birthDate.getFullYear()+year); dStart.setDate(dStart.getDate()+(w*7));
+                        let dEnd = new Date(dStart); dEnd.setDate(dEnd.getDate()+6);
+                        
+                        div.onclick = () => {
+                            const promptName = prompt("Enter Name for Milestone (or cancel):");
+                            if(promptName) {
+                                addMilestone(dStart.toISOString().split('T')[0], promptName);
+                            }
+                        };
+
+                        const m=dStart.getMonth(); 
+                        
+                        if(activeHighlights.winters) { if(m===11||m===0||m===1) div.classList.add('hl-winter'); }
+                        if(activeHighlights.springs) { if(m>=2 && m<=4) div.classList.add('hl-spring'); }
+                        if(activeHighlights.summers) { if(m>=5 && m<=7) div.classList.add('hl-summer'); }
+                        if(activeHighlights.autumns) { if(m>=8 && m<=10) div.classList.add('hl-autumn'); }
+
+                        if(activeHighlights.elections) { 
+                            const y=dStart.getFullYear(); 
+                            if(y%4===0 && m===10 && dStart.getDate()<8) div.classList.add('hl-election'); 
+                        }
+                        
+                        if(activeHighlights.olympics) { 
+                            const y=dStart.getFullYear(); 
+                            if(y%4===0 && (m===6||m===7)) div.classList.add('hl-olympics'); 
+                            if(y%4===2 && m===1) div.classList.add('hl-olympics'); 
+                        }
+
+                        if(activeHighlights.birthdays && w === 0) div.classList.add('hl-birthday');
+
+                        if(activeHighlights.superbowls) {
+                            if(m===1 && dStart.getDate() < 15) div.classList.add('hl-superbowl');
+                        }
+
+                        if(activeHighlights.christmas) {
+                            if(m===11 && dStart.getDate() >= 21 && dStart.getDate() <= 28) div.classList.add('hl-christmas');
+                        }
+
+                        if(activeHighlights.worldcup) {
+                            const y=dStart.getFullYear();
+                            if(y%4===2 && (m===5 || m===6)) div.classList.add('hl-worldcup');
+                        }
+
+                        let msIcon=""; let msTxt="";
+                        milestones.forEach(ms => { if(!ms.date) return; const md=new Date(ms.date.split('-').join('/')); if(md>=dStart&&md<=dEnd) { msIcon=ms.icon; msTxt+=`\n${ms.icon} ${ms.label}`; div.classList.add('has-milestone'); } });
+                        if(msIcon) div.innerHTML=`<span class="milestone-icon">${msIcon}</span>`;
+                        div.setAttribute('data-info', `Age ${year} | ${dStart.toLocaleDateString()} ${msTxt}`);
+                    }
+                    fragment.appendChild(div);
+                }
+            }
+            grid.appendChild(fragment);
+        }
+    </script>
+</body>
+</html>
